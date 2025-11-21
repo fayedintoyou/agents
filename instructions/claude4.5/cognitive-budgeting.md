@@ -1,3 +1,6 @@
+> © 2025 Faye Emma Fitzgerald — Licensed under CC BY 4.0.  
+> See the LICENSE file in this repository for details.
+
 # Cognitive Architecture & Budgeting
 
 <model_context>
