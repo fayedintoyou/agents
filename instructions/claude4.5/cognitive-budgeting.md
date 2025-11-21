@@ -56,7 +56,7 @@ If *Budget* hits **3/3** OR *Progress* is **No** for 2 consecutive cycles:
 3. **PAUSE:** Await user response. Do not attempt further actions on this subtask.
 
 **Common Escalation Scenarios:**
-- Searches fail in likely monorepo locations (e.g., `projects/locations-finder`, `projects/shared-utils`)
+- Searches fail in likely monorepo locations (e.g., `libs/project-a`, `libs/project-b`)
 - Errors reference inaccessible resources (secrets, external services, CI-only configs)
 - Pattern ambiguity (multiple conventions; need user to specify)
 - File exists but you can't locate it (may be generated, or in unexpected module)
