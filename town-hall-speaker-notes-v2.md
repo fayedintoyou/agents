@@ -2,37 +2,37 @@
 
 This version assumes roughly a couple of minutes per question and is written to be easy to read from live.
 
-## 1. What’s earned my trust recently?
+## 1. You said you try to separate hype from what’s real, and you’d rather be a steward of tokens than chase adoption metrics. What’s earned your trust recently?
 
-Probably repeatability.
+I think, more generally, I trust approaches that lean on the model.
 
-I’ve seen a lot of impressive demos, but what actually earns my trust is being able to use an approach over and over and start to understand where it works and where it breaks.
+I’ve run hundreds of agentic sessions at this point, and one thing I’ve gotten more comfortable with is starting from the assumption that the model is pretty capable. I don’t need to build a huge process around it before I let it work. I can give it a lot of room, see where it struggles, and then fill in those gaps.
 
-A big part of that for me is not getting too attached to frameworks. I like to pull them apart and ask what they’re actually adding. Better context? A useful tool? A verification step? Some decomposition that genuinely improves the result? Great. Keep it.
+That’s probably the biggest thing that’s earned my trust lately: seeing how far I can go with the model itself before I need extra scaffolding.
 
-But if there’s a lot of process around something the model already does pretty well, I want to know that too.
+Maybe it needs context about our codebase. Maybe it needs to know a decision we made six months ago. Maybe it needs a test or some other feedback so it can tell whether it broke something. Maybe a planning step really does help for a certain kind of task. Those are useful additions because I can point to the gap they’re filling.
 
-The mental model I use is basically a leash. I’m always testing how much freedom I can give the model.
+What makes me skeptical is when the orchestration comes first and the model is buried underneath it.
 
-If the leash is too tight, I’m doing too much of the work myself. If it’s too loose, I get slop. So I keep moving that boundary.
+So when I see a new framework, I tend to pull it apart. What is this actually adding? Better context? A useful tool? A check? Something that fixes a failure I’ve actually seen? Great. Keep it. But if it’s a lot of prompts, personas, artifacts, and process around something the model already handles well, then I start asking whether I need any of that.
 
-And the question I come back to constantly is: **do I still need this?**
+That’s where the leash metaphor comes in for me. I’m always testing how much freedom I can give the model.
 
-Maybe I added a planning step because the model needed it six months ago. Fine. But I want to try removing it later. Same with personas, intermediate artifacts, giant instruction files, whatever it is.
+If I hold it too tightly, I’m leaving speed on the table because I’m still doing a lot of the orchestration myself. If I let it go too far and the output starts getting sloppy, then I’ve found a boundary.
 
-If I remove something and quality stays the same, great. The workflow got simpler. If quality drops, then I’ve found a real constraint worth engineering around.
+And I keep coming back to: **do I still need this?**
 
-That’s the danger I see in one-size-fits-all frameworks. A workaround can become permanent ceremony, especially when the underlying models are changing this fast.
+If I added a planning step or an artifact because it helped six months ago, I want to try taking it back out later. If the workflow still holds up, great — I can simplify it and give the model a little more leash. If quality drops, now I know that piece is actually buying me something.
 
-Context fits into that too. The models already know a lot. What they usually need from us is our situation — our codebase, our decisions, our constraints, what just happened. So I want to be deliberate about what context I’m giving them instead of piling on instructions by default.
+That’s the danger I see in one-size-fits-all frameworks. The scaffolding can stick around long after the reason for it is gone.
 
-And when something doesn’t need model judgment, I’d rather make it deterministic. If Prettier can enforce formatting, let Prettier do it. If a test can catch a bad change, give the workflow that check instead of another paragraph telling the model to be careful.
+The token stewardship piece fits into the same idea. Context is limited, so I want to spend it on the gaps the model actually has. These models already know a lot. What they usually need from us is our situation — our code, our constraints, our history, whatever just happened in the environment.
 
-That’s really how I think about trust now. I’m not asking myself whether I trust the model in some broad sense. I’m asking whether I trust this particular way of working with it.
+And if something is deterministic, I’d rather make it deterministic. If Prettier can enforce formatting, use Prettier. If a test can catch a bad change, give the model the test instead of another paragraph telling it to be careful.
 
-Have I used it enough to know where it tends to go wrong? Do I know what happens when it does? Are the right checks in place? Which pieces of scaffolding are actually helping, and which ones are just there because we started with them?
+So, yeah, I think the things that earn my trust are the ones that are actually leaning on the model’s capability, not hiding it under a lot of machinery. Then I can add structure where I see a real need for it.
 
-Once I can answer those questions, I’m a lot more comfortable giving the workflow more responsibility. And if I can’t answer them yet, that just tells me where I need more reps or a tighter boundary.
+And once I understand where that approach fails, I’m much more comfortable relying on it.
 
 If I had to put it in one line: **I trust a system a lot more once I understand how it fails.**
 
@@ -64,11 +64,12 @@ The point isn’t to have every experiment succeed. The point is to get faster a
 
 ## Pocket lines
 
+- I trust approaches that lean on the model and add structure where the model actually needs help.
+- I’ve gotten more comfortable starting from the assumption that the model is capable, then filling in the gaps.
 - I’m always testing how much leash I can give the model.
 - The question I keep coming back to is: do I still need this?
 - A workaround can turn into ceremony if you never test whether it’s still necessary.
 - These models already know a lot. Usually what they’re missing is our situation.
-- I’m not asking whether I trust the model in the abstract. I’m asking whether I trust this way of working with it.
 - I trust a system a lot more once I understand how it fails.
 - Experimentation is how you find the right leash length.
 - I’m fine with trying five things and throwing three away if the other two are genuinely useful.
