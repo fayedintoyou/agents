@@ -2,133 +2,141 @@
 
 ## What’s earned my trust recently?
 
-The biggest thing for me is repeatability.
+Probably repeatability more than anything.
 
-I’m less interested in the one demo where the model does something incredible, and more interested in whether I can use the same basic approach over and over and keep getting useful results. Once I can do that across a lot of sessions, and I have a decent sense of where it will fail, it starts to feel less like a demo and more like an engineering tool.
+I’ve seen plenty of really impressive demos, but the thing that changes my mind is when I can take an approach, use it over and over again, and it keeps working. Once I’ve run something a bunch of times and I have a decent feel for where it breaks, I’m much more comfortable relying on it.
 
-A lot of what has earned my trust lately is actually not a specific model or framework. It’s understanding the fundamentals around the model well enough that I can tell what is doing real work and what is mostly ceremony.
+That’s also how I tend to look at new frameworks or workflows. I usually want to pull them apart a little bit and see what they’re actually doing.
 
-I try to decompose anything new I see. If somebody shows me a framework, I want to know what it is actually adding. Is it giving the model information it would not otherwise have? Is it exposing a useful tool? Is it breaking a problem into stages that genuinely improve the result? Is it adding a verification loop? Or is it mostly a large collection of prompts, personas, and Markdown files around something the base model could already do pretty well?
+If somebody shows me a framework, I’m asking things like: what did this add? Did it give the model context it didn’t have before? Did it give it a useful tool? Did it add a check somewhere? Did breaking the work into a couple of steps actually improve the result?
 
-That distinction matters to me because it is very easy in this space to confuse complexity with capability.
+Sometimes the answer is yes, and that’s useful. Sometimes you peel it back and there’s a lot of prompting, personas, Markdown, and process around something the model was already pretty capable of doing.
 
-For example, if a system says it can generate an ADR, I’m not automatically impressed because it has a large workflow around it or tells the model, “you are a distinguished software architect.” I want to compare that against the simpler version: give a strong model our ADR template, the relevant code and decision context, our engineering standards, and whatever constraints actually matter. Then ask how much value the rest of the machinery added.
+That’s where I try to be careful about hype. A complicated system can look really sophisticated, but I still want to know what part of it is actually doing the work.
 
-That is usually how I try to separate hype from something real. I keep asking: what new information, control, feedback, or capability did this actually introduce?
+Take something like generating an ADR. I can build a pretty elaborate workflow around that. I can have a special architect persona, multiple stages, several generated artifacts, a bunch of instructions. Or I can give the model our ADR template, the relevant code, our standards, the actual decision we’re trying to make, and see what it does.
 
-### The leash I keep adjusting
+Then I can start asking whether all the extra machinery made it better. Maybe it did. If it did, great — now I know why I want it. But I don’t want complexity to get a free pass just because it looks like a mature process.
 
-The mental model I use a lot is that I’m constantly figuring out how much leash I can give the model.
+### How much leash can I give it?
 
-If I keep the leash too tight, I’m leaving a lot of the value on the table. I can micromanage every step, prescribe every intermediate artifact, and tell it exactly how to reason, but at some point I’m spending more effort orchestrating the model than I’m saving. I’m moving too slowly.
+This is probably the mental model I use the most.
 
-If I let it run too far without the right context, feedback, or checks, then quality starts to fall apart and I get slop.
+I’m always playing with how much leash I can give the model.
 
-So a lot of the skill, for me, is finding that boundary. How much can I safely delegate today? What still needs a constraint? What can I stop specifying because the model is already good enough at it? As the models improve, I want to keep moving that boundary outward rather than preserving scaffolding just because it used to be necessary.
+If I hold it too tightly, I can get very safe, very controlled output, but I’m also doing a lot of the work myself. If I’m spelling out every step, every artifact, every decision, every bit of reasoning, at some point I’m just managing the model instead of getting much leverage from it.
 
-The leash should not be a fixed length. I want to keep testing whether I can loosen it. If I never do that, I’m not really taking advantage of improving models. If I loosen it too far and quality falls apart, that is useful too, because now I have found a real boundary instead of assuming one.
+If I let it run too far, especially without enough context or a way to check itself, then yeah, I can get slop.
 
-That leads to one of the habits I think matters most: constantly asking, “Do I still need this?”
+So I’m constantly moving that line around.
 
-A lot of AI workflows start with scaffolding because, at some point, that scaffolding was useful. Maybe the model needed a very explicit planning step. Maybe it needed a persona. Maybe it needed several intermediate artifacts before it could produce a good result. But models change quickly. Yesterday’s workaround can quietly become today’s ceremony.
+How much can I hand off today? What can I stop specifying? What can the model figure out on its own now that maybe it couldn’t six months ago?
 
-So I like to keep stripping things away and seeing what happens. Remove a step. Shorten the prompt. Stop generating an artifact. Give the model a little more room. If quality holds, great — the system got simpler and the model earned a little more leash. If quality falls apart, that is useful too, because now I have discovered an actual constraint worth engineering around.
+And I think that last part matters a lot. The leash shouldn’t stay the same length forever.
 
-That is the part of one-size-fits-all frameworks that makes me nervous. It is not that structure is bad. Structure can be extremely useful. The risk is that structure becomes permanent, and then we stop asking whether the model still needs it. In a space where the underlying capability is changing this quickly, I do not want to freeze around assumptions about what the model could or could not do six months ago.
+One of the questions I keep coming back to is: **do I still need this?**
 
-A complicated framework can also make a weaker model look impressive while obscuring what is actually doing the work. If there are twenty layers of orchestration around the model, it gets harder to answer which layer is helping, which one is redundant, which one is bloating context, and what the model can now do on its own.
+Maybe I added a very explicit planning step because the model used to fall apart without one. Great. Keep it while it’s helping. But a few model generations later, I want to try taking it out and see what happens.
 
-That is why I would rather understand the underlying mechanism than become attached to the framework itself. Keep the pieces that are buying something. Periodically test whether they still are. If they are not, remove them.
+Same thing with a persona, an intermediate artifact, a giant instruction file, whatever it is. Take it away. Shorten the prompt. Give the model a little more room.
 
-In a weird way, one of the things that makes me trust a system more is when I can remove scaffolding and it still works.
+If the quality stays the same, cool — I can simplify the workflow.
 
-The loop I want is pretty simple: add scaffolding when I observe a real failure, verify that it fixes the failure, and then periodically remove it to see whether the failure still exists.
+If the quality gets worse, that’s actually useful too. Now I’ve found a real constraint. I know that piece of scaffolding is buying me something, and I can engineer around that deliberately instead of keeping it around because a framework told me to.
 
-### Giving the model better surfaces
+That’s probably my biggest concern with one-size-fits-all frameworks. The structure might be totally reasonable when it gets created. The danger is that it just stays there.
 
-I also think less than I used to about clever prompting and more about what surfaces I can give the model to interact with.
+These models are changing really quickly. A workaround that was necessary six months ago can turn into ceremony without anybody noticing.
 
-Give it the repository. Give it the tests. Give it the engineering standards. Give it the ADR template. Give it the issue or product context. Give it a way to inspect the application. Give it tools that let it pull the information it needs instead of dumping everything into one giant prompt.
+And the more layers you have, the harder it gets to tell what is actually helping. You can have a framework that makes a weaker model look great, but now you’ve got twenty layers around the model and it’s hard to tell which five matter, which ten do nothing, and which five are actually hurting because they’re filling up context or pushing the model down some overly rigid path.
 
-The model already has a lot of general reasoning ability. What it often lacks is the specific state of your environment and a reliable way to interact with it.
+So I like the loop of: I see a failure, I add something to address it, I make sure that actually helped, and then every once in a while I try taking it back out.
 
-That is where a lot of the real leverage has come from for me.
+That feels healthier to me than deciding we found the right framework and freezing there.
 
-### Being a steward of tokens
+### Give the model things it can actually work with
 
-When I say I would rather be a steward of tokens than chase adoption metrics, I mostly mean that context is a real engineering resource.
+I’ve also started thinking less about clever prompts and more about what the model can actually see and interact with.
 
-I do not want to fill the model’s context window with instructions that it does not need or information that is not relevant to the current task. I want to spend that context on the things the model could not know otherwise: our architecture, the actual code, the business constraint, a decision that was made six months ago, the current state of a test failure, or feedback from the environment.
+Can it see the repo? Can it run the tests? Does it have our engineering standards? Does it have the ADR template? Can it inspect the application? Can it pull the issue or whatever other context it needs when it needs it?
 
-And if something does not require model judgment, I would rather make it deterministic.
+That tends to matter a lot more to me than finding the perfect wording for a prompt.
 
-If Prettier can enforce formatting, use Prettier. If ESLint can enforce a coding rule, use ESLint. If a test can tell the model whether it broke something, give it the test. I do not want to spend tokens repeatedly reminding a probabilistic system to do something that a deterministic tool can guarantee.
+The models already know a lot. What they usually don’t know is *our* situation. They don’t know the decision we made six months ago. They don’t know this weird constraint in our codebase. They don’t know what just failed in CI unless I give them a way to see it.
 
-That also gives the model a better feedback loop. Instead of telling it “please be careful,” I can give it something concrete that tells it whether the work is correct.
+So a lot of the work is just giving them good surfaces to operate on.
 
-So the thing that has earned my trust is not that I now believe the model is always right. It is almost the opposite. I trust it more because I have a better understanding of what I can delegate, what I need to verify, and what I should not ask the model to do in the first place.
+### What I mean by being a steward of tokens
 
-One line I like for this is:
+For me, that mostly comes down to context.
 
-> I trust systems where I understand the failure modes more than systems where I can show you the coolest success case.
+I don’t want to burn context repeating things the model doesn’t need or stuffing every possible instruction into every session. I’d rather use that space for the things it genuinely couldn’t know otherwise: the code, the architecture, the business constraint, a prior decision, the current test failure, whatever is actually relevant right now.
+
+And if something doesn’t really require model judgment, I’d rather take it out of the model loop entirely.
+
+If Prettier can enforce formatting, use Prettier. If ESLint can catch a rule, let ESLint catch it. If a test can tell the model it broke something, that’s much better than another paragraph saying, “please make sure you don’t break anything.”
+
+That makes the workflow cheaper and it also makes the model better, because now it has real feedback.
+
+I think that’s probably where my trust has come from. I’ve used these systems enough that I have a much better sense of what I can hand off, where I need a check, and when I’m asking the model to do something that would be better handled some other way.
+
+If I had to boil that down to one sentence, it would probably be:
+
+> I trust a system a lot more once I understand how it fails.
 
 ---
 
 ## What would you say to someone thinking, “I don’t want to look foolish trying this and having it not work”?
 
-I think that reaction is completely understandable, especially when there is a lot of attention on AI adoption and everybody is showing their best examples.
+I’d probably say: don’t make your first experiment something where you need it to work.
 
-The thing I would say is: do not start by trying to prove that AI works.
+Pick something cheap.
 
-Start with something bounded where failure is cheap.
+Give it a bug you haven’t looked at yet. Have it explain a piece of unfamiliar code. Ask it to write a test. Give it a small refactor. Let it dig through a log. Give it some little change where you already know roughly what a good answer should look like.
 
-Give it a bug you have not looked at yet. Ask it to explain an unfamiliar part of the codebase. Have it write a test. Give it a small refactor. Let it investigate a log or trace. Ask it to implement a change where you already understand what “good” looks like.
+Then just see what happens.
 
-Then pay attention to what happens.
+If it works, great. Give it a little more room next time.
 
-If it works, great. Push a little farther next time.
+If it doesn’t, that’s fine too, because now you’ve learned something. Maybe it didn’t have enough context. Maybe the task was vague. Maybe it had no way to check its own work. Maybe you let it run too far. Or maybe that’s just a bad task for the model right now.
 
-If it fails, that is useful too. Did it not have enough context? Did it misunderstand the task? Did it have no way to verify what it produced? Did I give it too much freedom? Or is this simply a type of problem that the model is not very good at yet?
+That process of figuring out where it works and where it doesn’t is basically the skill.
 
-That calibration is the skill.
+I don’t think you need a magic prompt. You definitely don’t need to know every framework. You need enough reps that you start getting a feel for what you can hand off and what kind of setup makes a task go well.
 
-I do not think being good at this means knowing a magic prompt or memorizing a framework. It means developing intuition for what the model can handle, what information it needs, and how far you can let it run before you need to intervene.
+I also think we make this harder when every AI experiment has to look like a success story.
 
-There is also a social piece to this. I think we make experimentation harder when every use of AI is implicitly treated as something that needs to become a success story.
+If somebody tries five things and three of them are a waste of time, but two of them save them hours, I think that’s a good outcome. I’d much rather have that than somebody forcing AI into all five because they feel like they’re supposed to show adoption.
 
-I would much rather have somebody try five things, decide three of them were bad uses of AI, and find two that save them a lot of time than force all five into an adoption metric.
+Failure is part of the calibration.
 
-A failed experiment is not evidence that somebody is bad at using AI. Sometimes it is exactly how you learn that a task is a poor fit, or that the model needs a different surface, a tighter constraint, or a better feedback loop.
+So I’d keep it small at first, keep your own judgment in the loop, and start loosening the leash as the model earns it.
 
-So my advice would be: keep the first experiments cheap, keep your own judgment in the loop, and progressively give the model more responsibility when it earns it.
-
-You do not need to prove that AI works. Your job is to figure out where it works well enough to be useful.
+You don’t have to prove that AI works. You’re just trying to figure out where it’s actually useful for you.
 
 ---
 
-## If I need a shorter version in the room
+## Shorter version if I need to answer quickly
 
-The way I think about this is that AI-native engineering is not about believing the model is magical. It is about understanding what the model already gives you, then adding the minimum useful scaffolding around it: the right context, the right tools, and the right feedback loops.
+I think a lot of this comes down to understanding what the model can actually do and then constantly testing how much freedom I can give it.
 
-I am constantly adjusting how much leash I give it. Too little and I am not getting enough leverage. Too much and I get slop. The goal is to keep finding that boundary and move it outward as the models get better.
+I use the leash metaphor a lot. Too tight and I’m doing too much of the work myself. Too loose and I get slop. So I’m always trying to move that boundary and see how far I can push it.
 
-The question I keep coming back to is, “Do I still need this?” If I can remove a planning step, a prompt, an artifact, or some other piece of scaffolding and the quality stays the same, I should probably remove it. If the model starts failing, then I have found a real constraint worth engineering around. That is more useful to me than assuming a fixed framework is always the right amount of structure.
+The question I keep asking is, “Do I still need this?” If I added a planning step, a persona, an artifact, or some giant instruction file because the model needed it, that’s fine. But I want to come back later and try removing it. If nothing gets worse, get rid of it. If the model falls apart, now I’ve learned where a real constraint is.
 
-That is also why I try not to get too attached to frameworks. I want to understand what they are actually providing. If it is better context, useful decomposition, a new tool, or stronger verification, great. If it is mostly more prompts and Markdown around something the model could already do, I want to know that too.
+That’s also how I look at frameworks. I want to know which parts are actually helping. Better context? Useful tools? Real verification? Great. Keep those. If it’s mostly more process around something the model already handles, I don’t want to carry that forever.
 
-And for somebody who is worried about looking foolish if it fails: start where failure is cheap. Try a bounded task, see what breaks, and use that to calibrate. You are not trying to prove AI works. You are learning where it works well enough to trust.
+And for somebody who’s nervous about trying this and looking foolish if it fails: start with something cheap. Give it a bounded task, see what happens, and learn from that. You’re not trying to prove anything. You’re getting calibrated.
 
-## A few lines worth keeping in my pocket
+## Lines I may want to use
 
-- I trust systems where I understand the failure modes more than systems where I can show you the coolest success case.
-- I try to understand frameworks as mechanisms, not brands.
-- Complexity and capability are not the same thing.
-- I am always asking how much leash I can safely give the model.
-- The leash should not be a fixed length. I want to keep testing whether I can loosen it.
-- One of the most important questions is: do I still need this?
-- Yesterday’s workaround can quietly become today’s ceremony.
-- Add scaffolding when you observe a real failure, then periodically test whether you can remove it.
-- Context is an engineering resource. I want to spend it on information the model could not know otherwise.
-- If something can be made deterministic, I would rather make it deterministic than spend tokens repeatedly asking the model to remember it.
-- I increasingly think about giving models better surfaces, not just better prompts.
-- You do not need to prove that AI works. You need to find where it works well enough to be useful.
+- I trust a system a lot more once I understand how it fails.
+- I’m always playing with how much leash I can give the model.
+- The leash shouldn’t stay the same length forever.
+- The question I keep coming back to is: do I still need this?
+- A workaround that was necessary six months ago can turn into ceremony without anybody noticing.
+- I want to know what part of the framework is actually doing the work.
+- I see a failure, I add something to address it, and later I try taking it back out.
+- Give the model good surfaces to work with: the repo, tests, standards, tools, and the context it actually needs.
+- If Prettier can do it, I don’t need to spend tokens asking the model to remember it.
+- You don’t have to prove that AI works. You’re trying to figure out where it’s actually useful.
