@@ -24,11 +24,15 @@ If I remove something and quality stays the same, great. The workflow got simple
 
 That’s the danger I see in one-size-fits-all frameworks. A workaround can become permanent ceremony, especially when the underlying models are changing this fast.
 
-The other piece is context. These models already know a lot. Usually what they’re missing is our situation — our codebase, our decisions, our constraints, what just happened. That’s where I want to spend context.
+Context fits into that too. The models already know a lot. What they usually need from us is our situation — our codebase, our decisions, our constraints, what just happened. So I want to be deliberate about what context I’m giving them instead of piling on instructions by default.
 
-And if something can be deterministic, I’d rather make it deterministic. If Prettier can enforce formatting, let Prettier do it. If a test can tell the model it broke something, give it the test.
+And when something doesn’t need model judgment, I’d rather make it deterministic. If Prettier can enforce formatting, let Prettier do it. If a test can catch a bad change, give the workflow that check instead of another paragraph telling the model to be careful.
 
-That’s probably where my trust comes from now: I have a better sense of how much I can hand off, where I need a check, and what scaffolding is actually earning its keep.
+That’s really how I think about trust now. I’m not asking myself whether I trust the model in some broad sense. I’m asking whether I trust this particular way of working with it.
+
+Have I used it enough to know where it tends to go wrong? Do I know what happens when it does? Are the right checks in place? Which pieces of scaffolding are actually helping, and which ones are just there because we started with them?
+
+Once I can answer those questions, I’m a lot more comfortable giving the workflow more responsibility. And if I can’t answer them yet, that just tells me where I need more reps or a tighter boundary.
 
 If I had to put it in one line: **I trust a system a lot more once I understand how it fails.**
 
@@ -64,6 +68,7 @@ The point isn’t to have every experiment succeed. The point is to get faster a
 - The question I keep coming back to is: do I still need this?
 - A workaround can turn into ceremony if you never test whether it’s still necessary.
 - These models already know a lot. Usually what they’re missing is our situation.
+- I’m not asking whether I trust the model in the abstract. I’m asking whether I trust this way of working with it.
 - I trust a system a lot more once I understand how it fails.
 - Experimentation is how you find the right leash length.
 - I’m fine with trying five things and throwing three away if the other two are genuinely useful.
