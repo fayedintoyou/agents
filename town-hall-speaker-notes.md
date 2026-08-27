@@ -26,9 +26,23 @@ If I let it run too far without the right context, feedback, or checks, then qua
 
 So a lot of the skill, for me, is finding that boundary. How much can I safely delegate today? What still needs a constraint? What can I stop specifying because the model is already good enough at it? As the models improve, I want to keep moving that boundary outward rather than preserving scaffolding just because it used to be necessary.
 
-That is also why I am cautious about becoming too attached to a particular framework. A framework can be useful, but I would rather understand the underlying mechanism. Then I can keep the parts that are actually helping and throw away the parts that are no longer buying me anything.
+The leash should not be a fixed length. I want to keep testing whether I can loosen it. If I never do that, I’m not really taking advantage of improving models. If I loosen it too far and quality falls apart, that is useful too, because now I have found a real boundary instead of assuming one.
+
+That leads to one of the habits I think matters most: constantly asking, “Do I still need this?”
+
+A lot of AI workflows start with scaffolding because, at some point, that scaffolding was useful. Maybe the model needed a very explicit planning step. Maybe it needed a persona. Maybe it needed several intermediate artifacts before it could produce a good result. But models change quickly. Yesterday’s workaround can quietly become today’s ceremony.
+
+So I like to keep stripping things away and seeing what happens. Remove a step. Shorten the prompt. Stop generating an artifact. Give the model a little more room. If quality holds, great — the system got simpler and the model earned a little more leash. If quality falls apart, that is useful too, because now I have discovered an actual constraint worth engineering around.
+
+That is the part of one-size-fits-all frameworks that makes me nervous. It is not that structure is bad. Structure can be extremely useful. The risk is that structure becomes permanent, and then we stop asking whether the model still needs it. In a space where the underlying capability is changing this quickly, I do not want to freeze around assumptions about what the model could or could not do six months ago.
+
+A complicated framework can also make a weaker model look impressive while obscuring what is actually doing the work. If there are twenty layers of orchestration around the model, it gets harder to answer which layer is helping, which one is redundant, which one is bloating context, and what the model can now do on its own.
+
+That is why I would rather understand the underlying mechanism than become attached to the framework itself. Keep the pieces that are buying something. Periodically test whether they still are. If they are not, remove them.
 
 In a weird way, one of the things that makes me trust a system more is when I can remove scaffolding and it still works.
+
+The loop I want is pretty simple: add scaffolding when I observe a real failure, verify that it fixes the failure, and then periodically remove it to see whether the failure still exists.
 
 ### Giving the model better surfaces
 
@@ -98,6 +112,8 @@ The way I think about this is that AI-native engineering is not about believing 
 
 I am constantly adjusting how much leash I give it. Too little and I am not getting enough leverage. Too much and I get slop. The goal is to keep finding that boundary and move it outward as the models get better.
 
+The question I keep coming back to is, “Do I still need this?” If I can remove a planning step, a prompt, an artifact, or some other piece of scaffolding and the quality stays the same, I should probably remove it. If the model starts failing, then I have found a real constraint worth engineering around. That is more useful to me than assuming a fixed framework is always the right amount of structure.
+
 That is also why I try not to get too attached to frameworks. I want to understand what they are actually providing. If it is better context, useful decomposition, a new tool, or stronger verification, great. If it is mostly more prompts and Markdown around something the model could already do, I want to know that too.
 
 And for somebody who is worried about looking foolish if it fails: start where failure is cheap. Try a bounded task, see what breaks, and use that to calibrate. You are not trying to prove AI works. You are learning where it works well enough to trust.
@@ -108,6 +124,10 @@ And for somebody who is worried about looking foolish if it fails: start where f
 - I try to understand frameworks as mechanisms, not brands.
 - Complexity and capability are not the same thing.
 - I am always asking how much leash I can safely give the model.
+- The leash should not be a fixed length. I want to keep testing whether I can loosen it.
+- One of the most important questions is: do I still need this?
+- Yesterday’s workaround can quietly become today’s ceremony.
+- Add scaffolding when you observe a real failure, then periodically test whether you can remove it.
 - Context is an engineering resource. I want to spend it on information the model could not know otherwise.
 - If something can be made deterministic, I would rather make it deterministic than spend tokens repeatedly asking the model to remember it.
 - I increasingly think about giving models better surfaces, not just better prompts.
