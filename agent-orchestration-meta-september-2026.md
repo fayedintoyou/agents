@@ -90,7 +90,7 @@ All links were researched or accessed **September 15, 2026**. Original X post da
 - OpenAI: [harness engineering (February 11, 2026)](https://openai.com/index/harness-engineering/), [Symphony (April 27, 2026)](https://openai.com/index/open-source-codex-orchestration-symphony/), [tool-backed repetitive work (August 25, 2026)](https://developers.openai.com/blog/automating-repetitive-work-at-openai-with-codex), [Agents API (September 10, 2026)](https://openai.com/index/introducing-the-agents-api/), [skills and prompts (September 11, 2026)](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra).
 - Practitioners: Uncle Bob [SwarmForge](https://github.com/unclebob/swarm-forge), [September 7 X](https://x.com/unclebobmartin/status/2096994914185662851), [September 11 X](https://x.com/unclebobmartin/status/2098432570887217520); Matt Pocock's [skills](https://github.com/mattpocock/skills), [tickets](https://github.com/mattpocock/skills/blob/main/docs/engineering/to-tickets.md), [implementation](https://github.com/mattpocock/skills/blob/main/docs/engineering/implement.md), [two-axis review](https://github.com/mattpocock/skills/blob/main/docs/engineering/code-review.md); Garry Tan's [essay](https://github.com/garrytan/gbrain/blob/main/docs/ethos/THIN_HARNESS_FAT_SKILLS.md); Steve Yegge's [Wheelhouse essay](https://yegge.ai/essays/the-shape-of-things-to-come/); Armin Ronacher's [September 7 account](https://lucumr.pocoo.org/2026/9/7/astra-why/).
 
-## Addendum: constraints for the HubKit redesign
+## Addendum: constraints for the harness redesign
 
 Soften the strongest epistemic claim. “Procedural instructions decay and domain knowledge does not” is too absolute. The audit establishes that all observed defects in this sample were in procedural material, which is excellent evidence that procedural prose has a much larger maintenance surface. Domain knowledge can still become stale as APIs, team practices, Figma/GDS behavior, etc. change. Frame this as an observed defect asymmetry, not an invariant.
 
@@ -159,4 +159,4 @@ The memo’s strongest original contribution may not be “fork cognition, not p
 
 That explains the dead modes in a way that generalizes beyond this refactor. A knowledge statement can be validated locally. A capability can be perfectly implemented and perfectly documented and still be dead because nobody invokes it.
 
-Elevate that idea in the final architecture. Capability reachability should become an architectural invariant of HubKit. Validate not only that the implementation and documentation exist, but that a real caller can reach the executable capability and satisfy its contract.
+Elevate that idea in the final architecture. Capability reachability should become an architectural invariant of the harness. Validate not only that the implementation and documentation exist, but that a real caller can reach the executable capability and satisfy its contract.
