@@ -89,3 +89,74 @@ All links were researched or accessed **September 15, 2026**. Original X post da
 - Anthropic: [multi-agent research (June 2025)](https://www.anthropic.com/engineering/multi-agent-research-system), [long-running app harness (March 24, 2026)](https://www.anthropic.com/engineering/harness-design-long-running-apps), [managed agents / brain and hands (April 8, 2026)](https://www.anthropic.com/engineering/managed-agents), [Opus 5 prompting guidance](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5).
 - OpenAI: [harness engineering (February 11, 2026)](https://openai.com/index/harness-engineering/), [Symphony (April 27, 2026)](https://openai.com/index/open-source-codex-orchestration-symphony/), [tool-backed repetitive work (August 25, 2026)](https://developers.openai.com/blog/automating-repetitive-work-at-openai-with-codex), [Agents API (September 10, 2026)](https://openai.com/index/introducing-the-agents-api/), [skills and prompts (September 11, 2026)](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra).
 - Practitioners: Uncle Bob [SwarmForge](https://github.com/unclebob/swarm-forge), [September 7 X](https://x.com/unclebobmartin/status/2096994914185662851), [September 11 X](https://x.com/unclebobmartin/status/2098432570887217520); Matt Pocock's [skills](https://github.com/mattpocock/skills), [tickets](https://github.com/mattpocock/skills/blob/main/docs/engineering/to-tickets.md), [implementation](https://github.com/mattpocock/skills/blob/main/docs/engineering/implement.md), [two-axis review](https://github.com/mattpocock/skills/blob/main/docs/engineering/code-review.md); Garry Tan's [essay](https://github.com/garrytan/gbrain/blob/main/docs/ethos/THIN_HARNESS_FAT_SKILLS.md); Steve Yegge's [Wheelhouse essay](https://yegge.ai/essays/the-shape-of-things-to-come/); Armin Ronacher's [September 7 account](https://lucumr.pocoo.org/2026/9/7/astra-why/).
+
+## Addendum: constraints for the HubKit redesign
+
+Soften the strongest epistemic claim. “Procedural instructions decay and domain knowledge does not” is too absolute. The audit establishes that all observed defects in this sample were in procedural material, which is excellent evidence that procedural prose has a much larger maintenance surface. Domain knowledge can still become stale as APIs, team practices, Figma/GDS behavior, etc. change. Frame this as an observed defect asymmetry, not an invariant.
+
+Make model pin a first-class architectural concept and explicitly temporary. `hub-planner` and much of `hub-worker` survive because the current runtime gives agent frontmatter special model-selection semantics, not because planning and implementation inherently deserve separate cognitive agents. Document them as compatibility shims for model routing so future maintainers do not infer “planning belongs in a subagent.” Ideally centralize model routing later and delete the shims.
+
+Be careful with the definition of independent evaluation. A fresh evaluator reviewing a diff produced moments ago can still provide independent judgment if it receives only the artifact/spec and not the builder’s reasoning. Independence should be defined by information/context separation, not by elapsed time or whether the parent initiated both tasks. Preserve evaluator forks wherever fresh-context blindness is actually useful.
+
+Treat reachability linting as necessary but not sufficient. `lcf lint --reachability` is an excellent idea, but grep/static references establish syntactic connectivity, not semantic correctness. Account for dynamic dispatch and avoid false positives. Eventually consider a capability graph that validates declaration → caller → executable target/contracts, rather than only textual occurrence.
+
+Do not optimize for line-count reduction. 2,903 → ~1,235 is useful evidence of how much procedural duplication exists, but it should not become a target. Optimize for reduced duplicated policy, fewer stale references, lower context cost, deterministic behavior where appropriate, and maintained or improved task success. If 1,500 lines performs better than 1,235, keep 1,500.
+
+Put an evaluation gate in front of the large cuts. Before removing the existing planner/worker/procedural machinery, create a representative regression suite from real workflows: normal `/do`, ambiguous planning, UI/Figma work, Jira operations, bug fixing, review, vulnerability triage, etc. Run current vs. proposed harness on the same tasks and compare correctness, review findings, tool calls, token/context consumption, latency, and intervention rate. The new architecture should win empirically, not just architecturally.
+
+Preserve the core three-way distinction throughout the implementation: domain knowledge belongs in durable declarative context; mechanically decidable operations belong in executable tooling; genuinely independent judgment/exploration belongs in cognition forks. When something does not cleanly fit one of those buckets, stop and examine it rather than forcing it into the thesis.
+
+That third point is the one place where I think the memo may actually be slightly wrong, depending on the implementation. The screenshot calls this an anti-pattern:
+
+> “Evaluator on your own 1-task diff written seconds ago. Not independent judgment.”
+
+I do not buy that as stated.
+
+Suppose the lead/worker writes a patch, then you spawn a fresh Opus evaluator with:
+
+> Here is the requirement.  
+> Here is the diff.  
+> Here are the repo standards.  
+> Find violations.
+
+That absolutely can be independent judgment. In fact, it is one of the strongest remaining reasons to fork context.
+
+What would make it not independent is something like:
+
+> Here is the implementation.  
+> Here is why I chose this design.  
+> Here are all of my assumptions.  
+> Please verify that I was right.
+
+Now you have anchored the reviewer.
+
+Define independence as **epistemic isolation**, not “someone else’s code.” That is subtle but important because otherwise the cleanup might accidentally delete useful evaluator passes.
+
+Put the regression/evaluation harness in front of changes to `/do`. The existing system is mature enough to benchmark against itself: it has real behaviors, skills, failure modes, and apparently a skill-evaluation apparatus. Do not use this sequence:
+
+> Research says simpler harnesses are better → rewrite harness → vibes say it feels cleaner.
+
+Use this:
+
+```text
+CURRENT                         PROPOSED
+   │                                │
+   ├─ task A                        ├─ task A
+   ├─ task B                        ├─ task B
+   ├─ task C                        ├─ task C
+   └─ ...                           └─ ...
+         \                         /
+          correctness / tokens /
+          latency / intervention /
+          review findings / failures
+```
+
+Some old scaffolding will probably have been compensating for a model weakness that no longer exists. Delete it. Some will encode an obscure but important behavior nobody remembered. Keep or convert it. Some may make Opus 5 worse because a rigid process interferes with its own reasoning. Delete that too—but only after the comparison establishes it.
+
+The memo’s strongest original contribution may not be “fork cognition, not procedure”; that principle was supplied going in. The audit’s novel finding is more interesting:
+
+> **Facts have one end; capabilities have two.**
+
+That explains the dead modes in a way that generalizes beyond this refactor. A knowledge statement can be validated locally. A capability can be perfectly implemented and perfectly documented and still be dead because nobody invokes it.
+
+Elevate that idea in the final architecture. Capability reachability should become an architectural invariant of HubKit. Validate not only that the implementation and documentation exist, but that a real caller can reach the executable capability and satisfy its contract.
