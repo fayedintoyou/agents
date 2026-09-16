@@ -1,0 +1,162 @@
+# Agent orchestration meta — September 2026
+
+Research and access date: **September 15, 2026**  
+Status: **Research note / architecture memo; no harness changes proposed as a commit**  
+Scope: Claude Code, Codex, and coding-agent workflows. The recommendations are hypotheses to test against this repository's actual configuration, not a claim that every team should use one agent.
+
+## Executive summary
+
+Subagents are still useful. The more specific shift is away from making the lead agent a phase-by-phase dispatcher that automatically passes a plan to a worker, an implementation to a reviewer, and every API operation to a relay. Stronger lead models can often investigate, plan, implement, and test a coherent task in one context. Durable specs, tickets, tests, commits, and issue state carry work across *necessary* context boundaries. Tools and scripts handle repeatable mechanics. Fresh cognitive contexts are reserved for broad exploration, genuinely independent work, and independent judgment.
+
+**Fork cognition, not procedure** is this memo's proposed rule of thumb, not a quotation or settled industry doctrine. If a task needs its own thinking context, fork it; if it only needs many reproducible operations, improve the tool. This still leaves room for large, purpose-built multi-agent factories: both [OpenAI's Symphony](https://openai.com/index/open-source-codex-orchestration-symphony/) and [Steve Yegge's Wheelhouse](https://yegge.ai/essays/the-shape-of-things-to-come/) are counterexamples to any blanket “multi-agent is dead” claim.
+
+My provisional default for the existing planner / worker / evaluator / scout / relay scheme is **a frontier lead owning the whole small-to-medium change, with durable artifacts and one or two fresh reviewers after a substantive diff**. For independent bounded tickets, use separate top-level sessions and worktrees when appropriate. Treat the current [OpenSpec adoption plan](openspec-adoption-plan.md) as a draft to audit, not proof that its proposed skills or Jira handoffs already run exactly as written.
+
+## Three different boundaries
+
+| Mechanism | What crosses the boundary | Good use | Poor use |
+| --- | --- | --- | --- |
+| **Nested subagent** | A parent asks a child with an isolated cognitive context for findings or judgment; a compressed answer returns to the parent. | High-entropy scout research, competing hypotheses, bounded investigation, independent review. | Routine `rg`/repository lookup; a worker whose primary output is a commit and tests, where returning its narrative to a parent adds little. |
+| **Fresh independent session** | A separate top-level coding session owns a bounded work product, often on its own branch/worktree. The spec, commits, tests, and ticket state are the handoff. | An unblocked implementation ticket; several independent tickets in parallel; work that benefits from a clean context and integration gates. | A sequential phase with tightly shared state that the current lead can finish in context. |
+| **Tool / script / skill / MCP action** | The lead requests execution or loads reusable procedure. The script or endpoint performs mechanical work; the agent interprets results and exceptions. | Jira/API fetch and pagination, normalization, batch commands, schema validation, deterministic checks. | Calling another reasoning agent solely to operate an API. |
+
+A *skill* can be a model-readable instruction, so it is not automatically deterministic. The reproducible part is its underlying typed API, CLI, script, test, or schema. An MCP server can expose reliable operations without being a second reasoning agent. A fresh independent session can itself spawn a bounded scout or reviewer; the terms describe **what the boundary is for**, not mutually exclusive products.
+
+A quick decision rule:
+
+| Question | Routing |
+| --- | --- |
+| Does this need separate cognition? **No** | Same lead plus a direct tool/script; persist the result if it matters later. |
+| **Yes**; is the main output information or judgment that returns to the lead? | Nested scout, analyst, or reviewer with a bounded question and compressed findings. |
+| **Yes**; is the main output a bounded, testable work product? | Fresh independent session, typically given a ticket/spec and isolated worktree if concurrent. |
+| Neither answer fits | Clarify the artifact, the ownership boundary, or the decomposition before spawning. |
+
+## What changed from the 2025 / early-2026 meta
+
+The earlier pattern was defensible, especially for long tasks and weaker models. [Anthropic's June 2025 research system](https://www.anthropic.com/engineering/multi-agent-research-system) used a lead and parallel research subagents. Its [March 24, 2026 application harness experiment](https://www.anthropic.com/engineering/harness-design-long-running-apps) used planner → generator → evaluator with persistent artifacts to build a multi-hour app. Even there, upgrading to Opus 4.5 removed Sonnet 4.5 context-reset machinery that no longer helped that experiment; the separate evaluator and artifacts still mattered. This is a specific measured experiment, not proof that all planner/worker systems are obsolete.
+
+By [April 8](https://www.anthropic.com/engineering/managed-agents), Anthropic framed model/harness components as assumptions that should be revisited as models improve and separated its reasoning “brain” from sandbox, tool, and MCP “hands.” The article still describes multiple brains where scale calls for them. [Opus 5 prompting guidance](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5), accessed September 15, explicitly cautions that the model can over-delegate and over-verify, recommending subagents for sizeable, independent tracks rather than small tasks or repetitive double-checking. That warning is compatible with a deliberate fresh *acceptance* review of a meaningful diff; it argues against spawning reviewers on every intermediate step.
+
+OpenAI's [February 2026 harness engineering report](https://openai.com/index/harness-engineering/) emphasized repository knowledge, executable checks, local tools, and agent-to-agent review. [Symphony, published April 27](https://openai.com/index/open-source-codex-orchestration-symphony/), uses an issue tracker as control plane and isolated workspaces per ticket. The [Agents API announcement on September 10](https://openai.com/index/introducing-the-agents-api/) makes sessions, tool access, sandboxes, and subagents provider-managed Codex harness features. That reduces the need to hand-build *every* lifecycle mechanism, but does not remove the value of application-specific task state, concurrency control, or review. OpenAI's [September 11 guidance on skills and prompts](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra) is another reason to re-audit accumulated instructions rather than assume more scaffolding always helps.
+
+The shift is best read as **fewer automatic role boundaries where context is shared; more artifact-mediated concurrency and reproducible execution; selected fresh cognition where isolation actually improves the outcome**. Vendor articles, practitioner systems, and anecdotes support that direction, but no cited source measures a universal September 2026 industry adoption rate.
+
+## Practitioner evidence and disagreement
+
+**Robert C. Martin (“Uncle Bob”).** His [SwarmForge repository](https://github.com/unclebob/swarm-forge) documents isolated worktrees, durable handoffs, and named two-, four-, and six-role packs—close in spirit to an explicit planner/worker/evaluator architecture. In a [September 7 X post](https://x.com/unclebobmartin/status/2096994914185662851), he questioned whether a tightly constrained harness with strict specifications and testing gates was constraining increasingly capable coding agents. In a [September 11 follow-up](https://x.com/unclebobmartin/status/2098432570887217520), he clarified that unit tests, CRAP metrics, mutation testing, and other engineering constraints still have value; his doubt was about treating agents as rigid components in a designed software architecture. **Interpretation:** reevaluate the agent org chart without discarding executable quality gates. This is a practitioner's public reconsideration, not evidence that he deleted all gates or finished replacing SwarmForge.
+
+**Matt Pocock.** His current [skills repository](https://github.com/mattpocock/skills) describes turning a settled spec into tickets ([to-tickets](https://github.com/mattpocock/skills/blob/main/docs/engineering/to-tickets.md)), then taking a fresh context for a bounded ticket ([implement](https://github.com/mattpocock/skills/blob/main/docs/engineering/implement.md)). The implementation output is the diff, test result, and commit rather than a worker's conversational handoff. His [code-review skill](https://github.com/mattpocock/skills/blob/main/docs/engineering/code-review.md) runs two isolated reviewers: Standards asks whether it fits the repository; Spec asks whether it fulfills the actual requirement. They report separately, so one passing axis cannot hide failure on the other. His repository also uses background research agents and may invoke implementation/review subagents inside skills; it is an example of *selective, artifact-led orchestration*, not an anti-subagent manifesto. A [September 2 issue raised by a contributor](https://github.com/mattpocock/skills/issues/1014) flags recursive, expensive post-fix review loops. That issue is user feedback, **not a statement by Pocock**; use it as a caution to bound review and remediation iterations.
+
+**Garry Tan.** His April draft essay [“Thin Harness, Fat Skills”](https://github.com/garrytan/gbrain/blob/main/docs/ethos/THIN_HARNESS_FAT_SKILLS.md) explicitly favors small routing/context machinery, reusable skills, and deterministic code for large-scale operations; it also mentions useful parallel subagents. This is his particular GBrain/application experience, not a universal coding-agent benchmark. The transferable principle is to keep repeatable know-how discoverable while making bulk execution a tested tool rather than an expensive chain of reasoning-agent calls.
+
+**Steve Yegge.** In his [August 2026 Wheelhouse essay](https://yegge.ai/essays/the-shape-of-things-to-come/), Yegge argues that reusable generic Gas Town-style harnesses did not fit his later needs and describes an application-specific software factory with named specialist agents, task graphs, separate repository copies, and review. He uses deterministic watchers to track state and wake reasoning models when judgment is needed. His position is a substantial counterexample: some high-throughput workloads justify far *more* agents, provided ownership, durable state, integration, and mechanical scheduling are real. “Fewer agents” is therefore a default for a coherent task, not a universal maximum.
+
+**Armin Ronacher.** On [September 7](https://lucumr.pocoo.org/2026/9/7/astra-why/), Ronacher described a long unattended coding-agent run with large output and substantial cost that produced little software he wanted to maintain. This is one author's experience, not a controlled comparison. It illustrates a failure mode for long autonomous runs: passing local tests and making many commits can diverge from usefulness, readability, and ownership. More autonomy alone is a weak success metric.
+
+**Other September X signal.** The original [September 11 Uncle Bob post](https://x.com/unclebobmartin/status/2098432570887217520) drew both agreement and resistance. For example, [Omar Sanad argued for owning and customizing one's harness](https://x.com/omarsar0/status/2098456262379745663), while [David Cramer described unwinding unwanted complexity in a sophisticated one](https://x.com/zeeg/status/2098461577838268621). These are original-post links, qualitative signals rather than a representative sample. X did not serve the full original threads in this research environment, so dates and excerpts were checked in indexed post results and, for longer Uncle Bob text, crosschecked against accessible reposts. Treat fine-grained wording as lower confidence than the directly accessible vendor articles and practitioner repositories.
+
+## What I would change in my current harness
+
+These are **evaluation targets**, not instructions to delete code now. In particular, [the existing determinism note](determinism-in-agent-workflows.md) distinguishes useful repeatable checks from unenforceable conversational promises and describes constraints on custom hooks in managed work environments. Prefer portable scripts, typed APIs, tests, and CI over assuming a local hook mechanism is available.
+
+| Current role / pattern | Provisional September 2026 policy |
+| --- | --- |
+| **Main Opus orchestrator** | Keep a strong lead; have it do investigation, design, implementation, and tests when the shared context fits. It owns integration and remediation. |
+| **Planner subagent** | Do not spawn per ticket or phase. Use one for ambiguous design, competing approaches, or a plan whose separate perspective materially helps. Otherwise write a concise plan in the lead context and persist decisions where needed. |
+| **Sonnet worker** | Keep model routing as a deliberate cost/capability choice. For bounded implementation with its own work product, prefer a fresh top-level session and ticket/worktree when isolation or concurrency helps. A nested worker remains possible when a compressed result back to the lead is the intended output. |
+| **Opus evaluator** | Retain fresh judgment after a meaningful diff. Start with one reviewer; use two orthogonal reviews for higher-risk changes (repository/code quality and requirements/spec), each citing concrete evidence. Bound recursive review loops. |
+| **Scout** | Retain for broad, uncertain, multi-source investigation or competing hypotheses likely to pollute lead context. Raise the threshold: ordinary file search and focused repository reading stay with the lead. |
+| **Relay** | Replace most API pagination, Jira retrieval, normalization, script execution, and repeated MCP calls with typed tools, scripts, or skills backed by execution primitives. Bring back a cognitive agent only for anomalies that need judgment. |
+| **Automatic phase-based handoff / evaluator swarm** | Remove as a default routing rule; trigger delegation by independence or isolation, and begin with one or two orthogonal reviewers. |
+| **Durable specs, tickets, tests, issue state** | Increase reliance on an authoritative artifact when a task crosses sessions. Audit the actual OpenSpec/Jira setup and keep one source of truth; do not turn every handoff into another conversational summary. |
+
+A proposed delegation policy, to test on real tickets:
+
+> Own the task end-to-end by default. Delegate only when work can proceed independently in parallel; an isolated context is desirable; a fresh independent judgment is useful; a bounded task is intentionally routed to another model; or broad exploration would materially pollute the lead context. Do not delegate sequential work merely because it belongs to a different lifecycle phase. Do not spawn agents for ordinary repository exploration or deterministic tool/API operations. Use durable artifacts when work crosses contexts. Prefer direct tools and scripts for execution-heavy work.
+
+For a coherent change, the lead investigates → records the necessary spec/decision → implements → tests; a fresh reviewer checks the resulting diff against both the repository and requirement; the original lead remediates and reruns executable gates. The reviewer returns actionable findings, **not** a new autonomous life cycle controller.
+
+For genuinely independent changes, a lead/design session writes a durable spec or task graph; separate top-level sessions take unblocked tickets in their own worktrees; deterministic tests/CI establish integration facts; fresh reviewers assess the integrated result. Parallelism requires independent ownership, bounded interfaces, and a way to integrate, not merely an opportunity to spawn three agents.
+
+## How to evaluate before a redesign
+
+Choose representative tickets: a small coherent fix, an ambiguous design, a broad research task, an API-heavy task, and a pair of genuinely independent implementations. Compare the current harness with lead-owned work plus selective review while holding acceptance criteria and model choice as steady as practical. Record accepted outcome, missed requirements, defect/rework findings, elapsed time, model/tool cost, context size, and how often artifact handoffs were actually consulted. Change one routing rule at a time; keep tests and enforceable gates. Separate “review found a real issue” from “review generated another loop.” The goal is a more useful result per unit of time and attention, not the fewest agents on paper.
+
+## Sources and dating
+
+All links were researched or accessed **September 15, 2026**. Original X post dates are September 7 or 11 as noted; older sources explain the preceding pattern. Linked primary sources include:
+
+- Anthropic: [multi-agent research (June 2025)](https://www.anthropic.com/engineering/multi-agent-research-system), [long-running app harness (March 24, 2026)](https://www.anthropic.com/engineering/harness-design-long-running-apps), [managed agents / brain and hands (April 8, 2026)](https://www.anthropic.com/engineering/managed-agents), [Opus 5 prompting guidance](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5).
+- OpenAI: [harness engineering (February 11, 2026)](https://openai.com/index/harness-engineering/), [Symphony (April 27, 2026)](https://openai.com/index/open-source-codex-orchestration-symphony/), [tool-backed repetitive work (August 25, 2026)](https://developers.openai.com/blog/automating-repetitive-work-at-openai-with-codex), [Agents API (September 10, 2026)](https://openai.com/index/introducing-the-agents-api/), [skills and prompts (September 11, 2026)](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra).
+- Practitioners: Uncle Bob [SwarmForge](https://github.com/unclebob/swarm-forge), [September 7 X](https://x.com/unclebobmartin/status/2096994914185662851), [September 11 X](https://x.com/unclebobmartin/status/2098432570887217520); Matt Pocock's [skills](https://github.com/mattpocock/skills), [tickets](https://github.com/mattpocock/skills/blob/main/docs/engineering/to-tickets.md), [implementation](https://github.com/mattpocock/skills/blob/main/docs/engineering/implement.md), [two-axis review](https://github.com/mattpocock/skills/blob/main/docs/engineering/code-review.md); Garry Tan's [essay](https://github.com/garrytan/gbrain/blob/main/docs/ethos/THIN_HARNESS_FAT_SKILLS.md); Steve Yegge's [Wheelhouse essay](https://yegge.ai/essays/the-shape-of-things-to-come/); Armin Ronacher's [September 7 account](https://lucumr.pocoo.org/2026/9/7/astra-why/).
+
+## Addendum: constraints for the harness redesign
+
+Soften the strongest epistemic claim. “Procedural instructions decay and domain knowledge does not” is too absolute. The audit establishes that all observed defects in this sample were in procedural material, which is excellent evidence that procedural prose has a much larger maintenance surface. Domain knowledge can still become stale as APIs, team practices, Figma/GDS behavior, etc. change. Frame this as an observed defect asymmetry, not an invariant.
+
+Make model pin a first-class architectural concept and explicitly temporary. `hub-planner` and much of `hub-worker` survive because the current runtime gives agent frontmatter special model-selection semantics, not because planning and implementation inherently deserve separate cognitive agents. Document them as compatibility shims for model routing so future maintainers do not infer “planning belongs in a subagent.” Ideally centralize model routing later and delete the shims.
+
+Be careful with the definition of independent evaluation. A fresh evaluator reviewing a diff produced moments ago can still provide independent judgment if it receives only the artifact/spec and not the builder’s reasoning. Independence should be defined by information/context separation, not by elapsed time or whether the parent initiated both tasks. Preserve evaluator forks wherever fresh-context blindness is actually useful.
+
+Treat reachability linting as necessary but not sufficient. `lcf lint --reachability` is an excellent idea, but grep/static references establish syntactic connectivity, not semantic correctness. Account for dynamic dispatch and avoid false positives. Eventually consider a capability graph that validates declaration → caller → executable target/contracts, rather than only textual occurrence.
+
+Do not optimize for line-count reduction. 2,903 → ~1,235 is useful evidence of how much procedural duplication exists, but it should not become a target. Optimize for reduced duplicated policy, fewer stale references, lower context cost, deterministic behavior where appropriate, and maintained or improved task success. If 1,500 lines performs better than 1,235, keep 1,500.
+
+Put an evaluation gate in front of the large cuts. Before removing the existing planner/worker/procedural machinery, create a representative regression suite from real workflows: normal `/do`, ambiguous planning, UI/Figma work, Jira operations, bug fixing, review, vulnerability triage, etc. Run current vs. proposed harness on the same tasks and compare correctness, review findings, tool calls, token/context consumption, latency, and intervention rate. The new architecture should win empirically, not just architecturally.
+
+Preserve the core three-way distinction throughout the implementation: domain knowledge belongs in durable declarative context; mechanically decidable operations belong in executable tooling; genuinely independent judgment/exploration belongs in cognition forks. When something does not cleanly fit one of those buckets, stop and examine it rather than forcing it into the thesis.
+
+That third point is the one place where I think the memo may actually be slightly wrong, depending on the implementation. The screenshot calls this an anti-pattern:
+
+> “Evaluator on your own 1-task diff written seconds ago. Not independent judgment.”
+
+I do not buy that as stated.
+
+Suppose the lead/worker writes a patch, then you spawn a fresh Opus evaluator with:
+
+> Here is the requirement.  
+> Here is the diff.  
+> Here are the repo standards.  
+> Find violations.
+
+That absolutely can be independent judgment. In fact, it is one of the strongest remaining reasons to fork context.
+
+What would make it not independent is something like:
+
+> Here is the implementation.  
+> Here is why I chose this design.  
+> Here are all of my assumptions.  
+> Please verify that I was right.
+
+Now you have anchored the reviewer.
+
+Define independence as **epistemic isolation**, not “someone else’s code.” That is subtle but important because otherwise the cleanup might accidentally delete useful evaluator passes.
+
+Put the regression/evaluation harness in front of changes to `/do`. The existing system is mature enough to benchmark against itself: it has real behaviors, skills, failure modes, and apparently a skill-evaluation apparatus. Do not use this sequence:
+
+> Research says simpler harnesses are better → rewrite harness → vibes say it feels cleaner.
+
+Use this:
+
+```text
+CURRENT                         PROPOSED
+   │                                │
+   ├─ task A                        ├─ task A
+   ├─ task B                        ├─ task B
+   ├─ task C                        ├─ task C
+   └─ ...                           └─ ...
+         \                         /
+          correctness / tokens /
+          latency / intervention /
+          review findings / failures
+```
+
+Some old scaffolding will probably have been compensating for a model weakness that no longer exists. Delete it. Some will encode an obscure but important behavior nobody remembered. Keep or convert it. Some may make Opus 5 worse because a rigid process interferes with its own reasoning. Delete that too—but only after the comparison establishes it.
+
+The memo’s strongest original contribution may not be “fork cognition, not procedure”; that principle was supplied going in. The audit’s novel finding is more interesting:
+
+> **Facts have one end; capabilities have two.**
+
+That explains the dead modes in a way that generalizes beyond this refactor. A knowledge statement can be validated locally. A capability can be perfectly implemented and perfectly documented and still be dead because nobody invokes it.
+
+Elevate that idea in the final architecture. Capability reachability should become an architectural invariant of the harness. Validate not only that the implementation and documentation exist, but that a real caller can reach the executable capability and satisfy its contract.
