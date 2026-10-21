@@ -16,7 +16,7 @@ This vision treats agentic development as an **operating model** spanning agents
 
 A developer or team should be able to state a meaningful objective, preserve the reasons and boundaries behind it, have the system select appropriate working methods, execute bounded pieces of work, evaluate their outcomes, and reuse what was learned. Human attention should concentrate on direction, ambiguity, exceptions and consequential acceptance—not manually shepherding every intermediate action.
 
-The important unit of progress is a **verified, intent-aligned outcome per unit of human attention and total cost**, not number of agents, tokens, PRs or automated steps.
+The important unit of progress is a **verified, intent-aligned outcome per unit of human attention and total cost**, not number of agents, tokens, PRs, generated tests or automated steps.
 
 ## 2. Three actors with different strengths
 
@@ -135,7 +135,64 @@ Loops must be bounded by retry, cost, time or lack-of-progress conditions. Oscil
 
 A passing suite is evidence only for the properties covered by that suite. The workflow must not equate “green” with “the human got what they meant.”
 
-## 8. Independent validation, review and human acceptance
+## 8. A behavior-first testing strategy for agent-generated software
+
+The relevant question is **which test gives the most confidence that the user's intended behavior works, for the total cost of writing, running, diagnosing and maintaining it?** Do not optimize for test count, line coverage, or adherence to a prescribed unit/integration/E2E ratio.
+
+Traditional test-pyramid advice was partly an economic response to expensive, slow and brittle broad-stack UI tests. Those concerns still exist, but the cost structure is changing. Modern browser automation, accessible locators, traces, isolated test environments, parallel execution and model-assisted test generation make realistic end-to-end scenarios easier to author, debug and maintain. In particular, agents can operate the application through its public UI much like a user, discover broken flows and turn those observations into executable regression tests.
+
+**This favors greater emphasis on behavior-oriented integration and end-to-end verification in agentic development—but does not imply that unit tests are obsolete or that E2E should dominate every suite.** Generating a test may be cheap while running it in CI, provisioning dependencies, diagnosing failures and stabilizing it remain expensive. Flaky checks decrease trust. A broad test often detects failure without precisely locating the defect.
+
+### Prefer evidence at the meaningful boundary
+
+Test through the highest-value boundary that is **realistic, stable and economical for the behavior in question**:
+
+| Verification level | Best use | Typical limitation |
+| --- | --- | --- |
+| Static checks, schemas and type systems | Mechanical invariants, structural validity and forbidden patterns | Cannot prove user behavior |
+| Focused unit and property-based tests | Pure algorithms, calculations, state transitions, edge cases and combinatorial invariants | Can validate an implementation that is wired incorrectly |
+| Integration and contract tests | APIs, database/queue/Redis behavior, serialization, cross-component interaction and consumer guarantees | May miss the assembled user journey |
+| E2E / functional tests | Critical real user journeys through a public boundary, including frontend-to-backend behavior | Environment cost, slower diagnosis and occasional flakiness |
+| Independent exploratory evaluation | Usability, unexpected journeys, semantic intent and conditions not anticipated in the coded suite | Probabilistic judgment; requires evidence and appropriate human acceptance |
+
+“E2E” is not synonymous with “browser.” A command-line tool can be tested through its CLI; an MCP server through its public tool interface; a backend through a real API or message-driven flow. The meaningful property is that the test exercises the intended observable contract across the relevant boundaries.
+
+### Test the intended product, not the code the builder happened to write
+
+Agent-generated tests introduce a particular risk: the same agent may invent an implementation **and then invent tests that confirm its own interpretation**. Such tests can be tautological or overfit to internal details. An agent may create dozens of mocks that reproduce its assumptions, assert private call ordering, snapshot incidental markup, or modify assertions until the current implementation passes.
+
+A useful default is to derive behavioral scenarios from the **original intent, independently established contracts and user-observable effects** before treating generated implementation tests as proof. Tests should survive reasonable internal refactoring and fail when a real behavioral guarantee breaks.
+
+Guardrails worth considering:
+- Require a behavioral reason for each new test; prefer a small number of meaningful cases over redundant test inflation.
+- Use stable public interfaces, semantic selectors and observable outcomes rather than private internals wherever practical.
+- Mock at genuine external boundaries, not so extensively that the integration being verified disappears.
+- Include negative/error behavior and invariants when they matter, not merely happy-path examples.
+- Review changes that remove, weaken, skip or auto-repair tests—especially independent acceptance tests. A test-healing agent must not silently turn a product defect into a passing assertion.
+- Use regression failures, mutation testing or deliberate fault injection selectively to ask whether a test detects meaningful breakage, rather than treating coverage percentage as a quality score.
+- Prefer deterministic assertions for observable behavior; use model judgment for qualitative aspects that cannot be encoded reasonably.
+
+### Keep unit tests where they provide leverage
+
+Good unit tests remain unusually useful for fast feedback on complicated domain logic, numerical correctness, boundary conditions, parsers, reducers, state machines and algorithms with many possible inputs. Property-based tests can express broad invariants much more economically than enumerating UI interactions. They also localize errors far faster than a failing browser flow.
+
+Conversely, testing whether every helper was called with a particular mock argument often adds little confidence if that interaction is not the public contract. A heavily mocked unit suite can be green while the actual application is unusable.
+
+The tradeoff is not “E2E versus unit.” It is **meaningful confidence versus test-maintenance burden**, evaluated per behavior.
+
+### Separate exploratory agent use from durable tests
+
+An agent independently navigating the product as a user can uncover failures that authored tests missed. Such exploration is valuable even when no reusable automated script exists yet.
+
+When an important failure is found, capture a reproducible scenario, observed result, expected result, environment and relevant artifacts (logs, traces, screenshots) where appropriate. Convert recurring critical paths into deterministic tests. Do not confuse a model's statement “I tried the app and it works” with recorded verification evidence.
+
+For CI, keep a small reliable suite of critical journeys and use focused checks for broader edge-case coverage. Add more E2E scenarios when they reveal gaps not economically covered elsewhere. Track runtime, flakiness, diagnosis and escaped defects; adjust the portfolio from observed evidence rather than a rigid testing pyramid or inverted pyramid.
+
+### Relationship to vertical slices
+
+A vertical slice is not complete merely because its internal services compile. It should demonstrate the intended outcome through an actual caller-facing boundary, with only out-of-scope collaborators stubbed. This does not require a full browser E2E test for every PR: a real CLI/API integration test may be the correct boundary. The key is proving a working path through the slice before broadening the implementation.
+
+## 9. Independent validation, review and human acceptance
 
 These are separate questions:
 
@@ -145,13 +202,35 @@ These are separate questions:
 
 Deterministic checks should cover mechanically verifiable properties. A fresh-context model judge can evaluate semantic quality without inheriting the builder's entire reasoning trajectory. Independence reduces some self-confirmation, but does not guarantee unbiased judgment.
 
-**Held-out behavioral scenarios** provide additional confidence that a builder did not merely optimize to pass tests it could see. Builders should know legitimate requirements and public acceptance criteria; selected evaluation cases can remain unseen. Feedback should be actionable without exhausting the hidden set through repeated leakage. Hidden tests themselves must be checked against the real intent.
+### Visible development tests versus blind acceptance tests
+
+**Held-out behavioral scenarios** provide confidence that a builder did not merely optimize to pass tests it could see. This is a deliberate **information boundary**, not simply another test category.
+
+The implementing agent should receive the original intent, constraints, legitimate public acceptance criteria and whatever visible tests it needs to work effectively. Separately, an evaluator can own additional scenarios derived from that same original intent—ideally created or reviewed independently of the implementation—and execute them **without exposing their exact inputs, expected outputs or test code to the builder**.
+
+A possible arrangement is:
+
+```text
+Human intent / agreed contract
+     ├─→ Builder → implementation → visible checks → correction
+     └─→ Independent evaluator → reserved scenarios / holdouts
+                                        ↓
+                           pass or actionable failure class
+                                        ↓
+                           builder correction or escalation
+```
+
+Isolation must be real: a file marked "hidden" inside the builder's accessible working tree is not held out. It may require separate repository permissions, evaluator-only artifacts or CI stages that reveal outcomes without granting access to the test definitions. The evaluating agent may need fresh context that intentionally excludes the builder's reasoning and self-authored tests.
+
+Held-out scenarios should test **declared behavior**, not undisclosed product requirements or arbitrary implementation preferences. When a holdout fails, return sufficient evidence to diagnose the behavior; repeatedly disclosing exact cases can exhaust the holdout's independence. Rotate, broaden or regenerate reserved scenarios when appropriate, and preserve reproducible traces for authorized reviewers.
+
+The builder can still author many useful tests. It simply must not be **the sole author and judge of the evidence used to certify its work**. An independent reviewer or evaluator should challenge whether the testing strategy covers plausible failures, not merely whether the suite is green. Blind tests do not guarantee correctness: validators and scenarios themselves need review, and human acceptance remains authoritative for consequential intent judgments.
 
 Adversarial builder–critic “death loops” should not be the default. They can consume substantial compute while endlessly disputing subjective points. Use narrowly scoped adversarial examination only for material unresolved risks, with explicit exit criteria. Ordinary independent validation and review should aim at **bounded convergence**.
 
 Reviewers should report evidence and concrete corrections, not merely generate additional opinions. A reviewer must be able to say “sufficient” and stop.
 
-## 9. Decomposition, vertical slices and parallel execution
+## 10. Decomposition, vertical slices and parallel execution
 
 Decompose work into small, meaningful units with clear behavior and preserved intent. Prefer **vertical slices** that exercise a real caller-to-outcome path rather than completing disconnected architectural layers. A small PR is useful when it reduces integration risk and feedback latency, not as a metric in itself. See [Simple Workflow Ideation](workflow.md).
 
@@ -159,7 +238,7 @@ Independent tasks can run in separate worktrees, sandboxes and context windows. 
 
 Parallelism is beneficial only when work is actually independent enough. Maintain an integration step that rechecks aggregate intent, cross-slice compatibility and end-to-end behavior.
 
-## 10. Model routing, caching and economics
+## 11. Model routing, caching and economics
 
 Model choice is a resource-allocation decision, not a fixed hierarchy. Use stronger reasoning where ambiguity and consequences warrant it; use less expensive models for well-specified bounded work with good checks. Evaluate actual dispatches and outcomes rather than assuming a model's advertised tier predicts success on every task.
 
@@ -174,7 +253,7 @@ Prompt caching and durable results solve related but different problems:
 
 Design workflows to preserve stable cacheable context when practical, while not sacrificing independence or correctness just to maximize cache hits. Durable outputs require dependency and freshness tracking; stale cached decisions can propagate errors faster than fresh reasoning.
 
-## 11. An end-to-end conceptual lifecycle
+## 12. An end-to-end conceptual lifecycle
 
 These are **responsibilities**, not a mandatory eleven-stage ceremony:
 
@@ -185,14 +264,14 @@ These are **responsibilities**, not a mandatory eleven-stage ceremony:
 5. **Discover capabilities:** reuse existing scripts, skills, methods and validated workflows.
 6. **Execute:** combine model judgment with deterministic primitives in suitable isolated environments.
 7. **Correct:** run objective checks, return evidence and iterate within explicit bounds.
-8. **Evaluate:** use fresh-context judges and held-out scenarios where uncertainty warrants.
+8. **Evaluate:** verify user-observable behavior at the most economical meaningful boundary, with independent judges and held-out scenarios where uncertainty warrants.
 9. **Review and integrate:** assess quality, cross-slice compatibility and system-level behavior.
 10. **Accept or escalate:** reserve human attention for intent, exceptions and consequential choices.
 11. **Preserve evidence:** store decisions, provenance, results, failures and lessons for future work.
 
 The cycle should become more efficient as experience accumulates: recurring judgments may become rules, failures become checks, successful methods become reusable capabilities, and routing improves from observed outcomes.
 
-## 12. Architectural boundaries: what Context Kit should and should not own
+## 13. Architectural boundaries: what Context Kit should and should not own
 
 **Context Kit's potential role:** portable discovery and delivery of durable context and working methods; hub navigation; provenance, freshness and authority; collaborative knowledge lifecycle; capability discovery; selective context for agent roles; links to specs, implementations and verification evidence; machine-readable pointers to authoritative sources and supported publication paths.
 
@@ -211,24 +290,24 @@ Integration can be incremental:
 
 A hub may contain multiple distinct parts; its MCP surface should expose the **hub as a whole**, not arbitrarily hide it behind one curated document. Progressive disclosure should keep navigation practical.
 
-## 13. Measurement and falsifiable improvement
+## 14. Measurement and falsifiable improvement
 
 Evaluate the operating model through outcomes, not orchestration theater:
 
 | Dimension | Possible evidence |
 | --- | --- |
 | Intent alignment | Human acceptance, rejected interpretations, post-merge behavior |
-| Reliability | Independent test results, escaped defects, repeated failure modes |
+| Reliability | Independent behavioral test results, escaped defects, meaningful regression failures |
 | Autonomy | Human interventions per verified outcome; appropriate escalations |
-| Efficiency | End-to-end latency, total model/tool cost, retries, review overhead |
+| Efficiency | End-to-end latency, total model/tool cost, CI/test runtime, retries, review overhead |
 | Reuse | Existing capability reuse versus rediscovery; stale-result incidents |
-| Convergence | Review cycles to resolution, oscillation, abandoned loops |
+| Convergence | Review cycles to resolution, oscillation, abandoned loops |\n| Verification quality | Critical user journeys covered, flaky tests, assertion weakening, duplicated or implementation-coupled tests |
 | Collaboration | Attribution completeness, update latency, unresolved conflicts |
 | Portability | Same context/method usable across tools and repositories |
 
 Avoid claiming causality from metrics alone. Compare similar tasks, preserve counterexamples and assess the cost of failures that are not immediately visible.
 
-## 14. Open questions and practical next steps
+## 15. Open questions and practical next steps
 
 This is a **direction**, not a backlog commitment. Before implementing more abstractions:
 
@@ -237,11 +316,11 @@ This is a **direction**, not a backlog commitment. Before implementing more abst
 3. **Close the publication/discovery loop.** Expose authoritative repository/path and write-policy hints; distinguish MCP read-only mode from independently authorized GitHub writes; define refresh semantics.
 4. **Pilot collaborative knowledge changes.** Try a real multi-person or multi-agent proposal → review → update → supersede cycle; distinguish human adoption from generated notes.
 5. **Pilot one reusable capability.** Pick a real repeated task, separate scripts from judgment, evaluate in fresh context, record limitations and observe subsequent reuse.
-6. **Test selective context boundaries.** Compare builder, reviewer and router contexts; keep holdouts independent while preserving provenance.
+6. **Test selective context boundaries.** Compare builder, reviewer and router contexts; keep holdouts independent while preserving provenance. Establish a small reliable set of real user/API journeys, then evaluate whether extra unit, integration or E2E tests actually add confidence.
 7. **Measure routing and economics.** Collect real task classes, outcomes, costs, cache behavior and escalation reasons before training a specialized classifier.
 8. **Keep implementations small.** Favor vertical slices and evidence from real usage over a premature universal orchestrator.
 
-## 15. The long-term destination
+## 16. The long-term destination
 
 The shift is from prompting an agent to **engineering the system that engineers**: a network of durable, discoverable, composable capabilities that turns intent into observable outcomes, learns from evidence, and scales useful work without scaling human supervision proportionally.
 
@@ -251,7 +330,7 @@ This does **not** require one agent that does everything, one mandated document 
 
 ---
 
-### Related documents in this repository
+### Testing references\n\n- [Playwright: Best Practices](https://playwright.dev/docs/best-practices) — user-visible behavior and test isolation.\n- [Playwright: Test Agents](https://playwright.dev/docs/test-agents) — model-assisted planning, generation and repair of browser tests; a capability, not automatic assurance that repairs preserve intent.\n- [Martin Fowler: Test Pyramid](https://martinfowler.com/bliki/TestPyramid.html) and [The Practical Test Pyramid](https://martinfowler.com/articles/practical-test-pyramid.html) — cost, breadth and reliability tradeoffs; even the classic framing allows exceptions when high-level checks are inexpensive.\n- [Kent C. Dodds: Static vs Unit vs Integration vs E2E](https://kentcdodds.com/blog/static-vs-unit-vs-integration-vs-e2e-tests) — choosing tests for confidence rather than strict counts.\n\n### Related documents in this repository
 
 - [Determinism in Agent Workflows](determinism-in-agent-workflows.md) — guidance, deterministic primitives and enforced boundaries.
 - [Simple Workflow Ideation](workflow.md) — thin vertical behavior slices.
