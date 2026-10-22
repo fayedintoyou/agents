@@ -301,7 +301,8 @@ Evaluate the operating model through outcomes, not orchestration theater:
 | Autonomy | Human interventions per verified outcome; appropriate escalations |
 | Efficiency | End-to-end latency, total model/tool cost, CI/test runtime, retries, review overhead |
 | Reuse | Existing capability reuse versus rediscovery; stale-result incidents |
-| Convergence | Review cycles to resolution, oscillation, abandoned loops |\n| Verification quality | Critical user journeys covered, flaky tests, assertion weakening, duplicated or implementation-coupled tests |
+| Convergence | Review cycles to resolution, oscillation, abandoned loops |
+| Verification quality | Critical user journeys covered, flaky tests, assertion weakening, duplicated or implementation-coupled tests |
 | Collaboration | Attribution completeness, update latency, unresolved conflicts |
 | Portability | Same context/method usable across tools and repositories |
 
@@ -330,7 +331,14 @@ This does **not** require one agent that does everything, one mandated document 
 
 ---
 
-### Testing references\n\n- [Playwright: Best Practices](https://playwright.dev/docs/best-practices) — user-visible behavior and test isolation.\n- [Playwright: Test Agents](https://playwright.dev/docs/test-agents) — model-assisted planning, generation and repair of browser tests; a capability, not automatic assurance that repairs preserve intent.\n- [Martin Fowler: Test Pyramid](https://martinfowler.com/bliki/TestPyramid.html) and [The Practical Test Pyramid](https://martinfowler.com/articles/practical-test-pyramid.html) — cost, breadth and reliability tradeoffs; even the classic framing allows exceptions when high-level checks are inexpensive.\n- [Kent C. Dodds: Static vs Unit vs Integration vs E2E](https://kentcdodds.com/blog/static-vs-unit-vs-integration-vs-e2e-tests) — choosing tests for confidence rather than strict counts.\n\n### Related documents in this repository
+### Testing references
+
+- [Playwright: Best Practices](https://playwright.dev/docs/best-practices) — user-visible behavior and test isolation.
+- [Playwright: Test Agents](https://playwright.dev/docs/test-agents) — model-assisted planning, generation and repair of browser tests; a capability, not automatic assurance that repairs preserve intent.
+- [Martin Fowler: Test Pyramid](https://martinfowler.com/bliki/TestPyramid.html) and [The Practical Test Pyramid](https://martinfowler.com/articles/practical-test-pyramid.html) — cost, breadth and reliability tradeoffs; even the classic framing allows exceptions when high-level checks are inexpensive.
+- [Kent C. Dodds: Static vs Unit vs Integration vs E2E](https://kentcdodds.com/blog/static-vs-unit-vs-integration-vs-e2e-tests) — choosing tests for confidence rather than strict counts.
+
+### Related documents in this repository
 
 - [Determinism in Agent Workflows](determinism-in-agent-workflows.md) — guidance, deterministic primitives and enforced boundaries.
 - [Simple Workflow Ideation](workflow.md) — thin vertical behavior slices.
